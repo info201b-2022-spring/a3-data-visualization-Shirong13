@@ -4,7 +4,43 @@ library(hrbrthemes)
 library(usmap)
 library(ggsn)
 
+# Load data
+
 incarceration <- read.csv("../a3-data-visualization-Shirong13/incarceration_trends.csv") 
+
+#Summary Information
+
+summary_info <- list()
+summary_info$num_variable <- ncol(incarceration)
+summary_info$division_data <- incarceration %>%
+  distinct(division) %>%
+  select(division)
+summary_info$state_data <- incarceration %>%
+  distinct(state) %>%
+  select(state)
+summary_info$region_data <- incarceration %>%
+  distinct(region) %>%
+  select(region)
+summary_info$avg_total_jail_pop <- mean(incarceration$total_jail_pop, na.rm = T)
+summary_info$max_total_jail_pop_2018 <- incarceration %>%
+  filter(year == max(year, na.rm = TRUE)) %>%
+  filter(total_jail_pop == max(total_jail_pop, na.rm = TRUE)) %>%
+  pull(total_jail_pop)
+summary_info$max_white_jail_pop <- max(incarceration$white_jail_pop, na.rm = T)
+summary_info$min_white_jail_pop <- min(incarceration$white_jail_pop, na.rm = T)
+summary_info$max_black_jail_pop <- max(incarceration$black_jail_pop, na.rm = T)
+summary_info$min_black_jail_pop <- min(incarceration$black_jail_pop, na.rm = T)
+summary_info$difference_black_white_jail_pop<- summary_info$max_black_jail_pop - summary_info$max_white_jail_pop
+summary_info$max_state_other_race_jail_pop <- incarceration %>%
+  filter(state == max(state, na.rm = TRUE)) %>%
+  filter(other_race_jail_pop == max(other_race_jail_pop, na.rm = TRUE)) %>%
+  distinct(other_race_jail_pop) %>%
+  pull(other_race_jail_pop)
+summary_info$min_state_other_race_jail_pop <- incarceration %>%
+  filter(state == min(state, na.rm = TRUE)) %>%
+  filter(other_race_jail_pop == max(other_race_jail_pop, na.rm = TRUE)) %>%
+  distinct(other_race_jail_pop) %>%
+  pull(other_race_jail_pop)
 
 #A chart that shows trends over time for a variable of your choice 
 
@@ -19,23 +55,23 @@ barchart <- urbanicity_jail %>%
   ylab("Jail Population") +
   xlab("Years") +
   ggtitle("Total Jail Population in Urban Cities Throughout the Years") + 
-  theme(plot.title = element_text(face = "bold", size = 20, hjust = 0.5)) +
+  theme(plot.title = element_text(face = "bold", size = 16, hjust = 0.5)) +
   theme(axis.title.x.bottom = element_text(face = "bold")) +
   theme(axis.title.y.left = element_text(face = "bold"))
 barchart
 
 #A chart that compares two variables to one another
 
-gender_jail_pop_region <- na.omit(incarceration) %>%
-  select(female_jail_pop, male_jail_pop, region)
+black_white_jail_pop_region <- na.omit(incarceration) %>%
+  select(white_jail_pop, black_jail_pop, region)
 
-scatterplot <- ggplot(gender_jail_pop_region , aes(x = female_jail_pop, y = male_jail_pop, color=region)) + 
+scatterplot <- ggplot(black_white_jail_pop_region , aes(x = white_jail_pop, y = black_jail_pop, color=region)) + 
   geom_point(size=4) +
   labs(color = "Regions") +
-  ylab("Male") +
-  xlab("Female") +
+  xlab("White") +
+  ylab("Black") +
   ggtitle("Jail Population in Different Regions") +
-  theme(plot.title = element_text(face = "bold", size = 20, hjust = 0.5)) +
+  theme(plot.title = element_text(face = "bold", size = 16, hjust = 0.5)) +
   theme(axis.title.x.bottom = element_text(face = "bold")) +
   theme(axis.title.y.left = element_text(face = "bold")) 
 theme_ipsum() 
@@ -43,22 +79,24 @@ scatterplot
 
 #A map that shows how your measure of interest varies geographically
 
-jail_pop_rate_state <- na.omit(incarceration) %>%
-  select(state, total_jail_pop_rate)
+other_race_jail_pop_state <- na.omit(incarceration) %>%
+  select(state, other_race_jail_pop)
 
 us_map <- usmap::us_map()
-usmap::plot_usmap(data = jail_pop_rate_state, values = "total_jail_pop_rate", labels = T)+
+map <- usmap::plot_usmap(data = other_race_jail_pop_state, values = "other_race_jail_pop", labels = T)+
   scale_fill_continuous(
-    low = "green", high = "red", name = "Jail Population Rate", label = scales::comma
+    low = "green", high = "red", name = "Other Race Jail Population", label = scales::comma
   ) + 
   theme_linedraw() +
+  xlab("Long") +
+  ylab("Lat") +
   theme(legend.position = "right") +
-  labs(title = "State's Jail Population Rate") +
-  theme(plot.title = element_text(face = "bold", size = 20, hjust = 0.5)) +
+  labs(title = "State's of Other Race Jail Population") +
+  theme(plot.title = element_text(face = "bold", size = 16, hjust = 0.5)) +
   theme(legend.background = element_rect(fill="white",
                                          size=0.5, linetype ="solid", 
                                          colour ="black"))
-
+map
 
 
 
